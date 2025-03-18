@@ -27,7 +27,8 @@ const fg = require('fast-glob');
 
     // 上传资源
     const assets = core.getInput('assets', { required: true })
-
+    const timeout = core.getInput('timeout')
+    
     assets.split('\n').forEach(async rule => {
       const [src, dst] = rule.split(':')
 
@@ -35,11 +36,14 @@ const fg = require('fast-glob');
 
       if (files.length && !/\/$/.test(dst)) {
         // 单文件
-        const res = await oss.put(dst, resolve(files[0]))
+        const res = await oss.put(dst, resolve(files[0]), {
+          timeout: 1000 * Number(timeout)
+        }).catch(err => {
+          core.setFailed(err && err.message)
+        })
         core.setOutput('url', res.url)
       } else if (files.length && /\/$/.test(dst)) {
         // 目录
-        const timeout = core.getInput('timeout')
         const res = await Promise.all(
           files.map(async file => {
             const base = src.replace(/\*+$/g, '')
