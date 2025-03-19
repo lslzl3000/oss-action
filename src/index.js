@@ -41,8 +41,11 @@ const fg = require('fast-glob');
 
       if (files.length && !/\/$/.test(dst)) {
         // 单文件
-        const res = await oss.put(dst, resolve(files[0]), {
-          timeout: timeout
+        const res = await oss.multipartUpload(dst, resolve(files[0]), {
+          timeout: timeout,
+          progress: (p) => {
+            core.info(`[${files[0]}] ${p.toFixed(2)}%`)
+          }
         }).catch(err => {
           core.setFailed(err && err.message)
         })
@@ -53,8 +56,11 @@ const fg = require('fast-glob');
           files.map(async file => {
             const base = src.replace(/\*+$/g, '')
             const filename = file.replace(base, '')
-            return oss.put(`${dst}${filename}`, resolve(file), {
-              timeout: timeout
+            return oss.multipartUpload(`${dst}${filename}`, resolve(file), {
+              timeout: timeout,
+              progress: (p) => {
+                core.info(`[${filename}] ${p.toFixed(2)}%`)
+              }
             }).catch(err => {
               core.setFailed(err && err.message)
             })
