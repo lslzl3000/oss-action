@@ -42,6 +42,7 @@ const fg = require('fast-glob');
       if (files.length && !/\/$/.test(dst)) {
         // 单文件
         const res = await oss.multipartUpload(dst, resolve(files[0]), {
+          parallel: 5,
           timeout: timeout,
           progress: (p) => {
             core.info(`[${files[0]}] ${p.toFixed(2)}%`)
@@ -57,6 +58,7 @@ const fg = require('fast-glob');
             const base = src.replace(/\*+$/g, '')
             const filename = file.replace(base, '')
             return oss.multipartUpload(`${dst}${filename}`, resolve(file), {
+              parallel: 5,
               timeout: timeout,
               progress: (p) => {
                 core.info(`[${filename}] ${p.toFixed(2)}%`)
