@@ -8,13 +8,17 @@ const fg = require('fast-glob');
 
 (async () => {
   try {
-    const timeout = core.getInput('timeout')
+    let timeout = core.getInput('timeout') 
+    if(timeout)
+      timeout = Number(timeout) * 1000
+    else
+      timeout = 600 * 1000
     // OSS 实例化
     const opts = {
       accessKeyId: core.getInput('key-id'),
       accessKeySecret: core.getInput('key-secret'),
       bucket: core.getInput('bucket'),
-      timeout: 600 * 1000
+      timeout: timeout
     }
 
     ;['region', 'endpoint']
@@ -37,8 +41,8 @@ const fg = require('fast-glob');
 
       if (files.length && !/\/$/.test(dst)) {
         // 单文件
-        const res = await oss.put(dst, resolve(files[0], {
-          timeout: 600 * 1000
+        const res = await oss.put(dst, resolve(files[0]), {
+          timeout: timeout
         }).catch(err => {
           core.setFailed(err && err.message)
         })
@@ -50,7 +54,7 @@ const fg = require('fast-glob');
             const base = src.replace(/\*+$/g, '')
             const filename = file.replace(base, '')
             return oss.put(`${dst}${filename}`, resolve(file), {
-              timeout: 600 * 1000
+              timeout: timeout
             }).catch(err => {
               core.setFailed(err && err.message)
             })
