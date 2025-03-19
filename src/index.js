@@ -8,11 +8,13 @@ const fg = require('fast-glob');
 
 (async () => {
   try {
+    const timeout = core.getInput('timeout')
     // OSS 实例化
     const opts = {
       accessKeyId: core.getInput('key-id'),
       accessKeySecret: core.getInput('key-secret'),
-      bucket: core.getInput('bucket')
+      bucket: core.getInput('bucket'),
+      timeout: timeout ? 1000 * Number(timeout) : 100 * 1000 // default 100s
     }
 
     ;['region', 'endpoint']
@@ -27,7 +29,6 @@ const fg = require('fast-glob');
 
     // 上传资源
     const assets = core.getInput('assets', { required: true })
-    const timeout = core.getInput('timeout')
     
     assets.split('\n').forEach(async rule => {
       const [src, dst] = rule.split(':')
@@ -36,9 +37,7 @@ const fg = require('fast-glob');
 
       if (files.length && !/\/$/.test(dst)) {
         // 单文件
-        const res = await oss.put(dst, resolve(files[0]), {
-          timeout: 1000 * Number(timeout)
-        }).catch(err => {
+        const res = await oss.put(dst, resolve(files[0]).catch(err => {
           core.setFailed(err && err.message)
         })
         core.setOutput('url', res.url)
@@ -48,9 +47,7 @@ const fg = require('fast-glob');
           files.map(async file => {
             const base = src.replace(/\*+$/g, '')
             const filename = file.replace(base, '')
-            return oss.put(`${dst}${filename}`, resolve(file), {
-              timeout: 1000 * Number(timeout)
-            }).catch(err => {
+            return oss.put(`${dst}${filename}`, resolve(file)).catch(err => {
               core.setFailed(err && err.message)
             })
           })
