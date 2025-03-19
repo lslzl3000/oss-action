@@ -20,6 +20,9 @@ inputs:
   timeout:
     required: false
     default: 600
+  parallel:
+    required: false
+    default: 6
 outputs:
   url:
     description: oss url

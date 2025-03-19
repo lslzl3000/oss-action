@@ -1,18 +1,19 @@
 
 const core = require('@actions/core');
-const github = require('@actions/github');
+// const github = require('@actions/github');
 const OSS = require('ali-oss');
-const fs = require('fs');
+// const fs = require('fs');
 const { resolve } = require('path');
 const fg = require('fast-glob');
 
 (async () => {
   try {
     let timeout = core.getInput('timeout') 
-    if(timeout)
-      timeout = Number(timeout) * 1000
-    else
-      timeout = 600 * 1000
+    timeout = Number(timeout) * 1000
+    let parallel = core.getInput('parallel')
+    parallel = Number(parallel)
+    core.info('[Params]', 'timeout:', timeout, 'parallel:', parallel)
+    
     // OSS 实例化
     const opts = {
       accessKeyId: core.getInput('key-id'),
@@ -33,7 +34,7 @@ const fg = require('fast-glob');
 
     // 上传资源
     const assets = core.getInput('assets', { required: true })
-    
+
     assets.split('\n').forEach(async rule => {
       const [src, dst] = rule.split(':')
 
@@ -42,10 +43,10 @@ const fg = require('fast-glob');
       if (files.length && !/\/$/.test(dst)) {
         // 单文件
         const res = await oss.multipartUpload(dst, resolve(files[0]), {
-          parallel: 5,
+          parallel: parallel,
           timeout: timeout,
           progress: (p) => {
-            core.info(`[${files[0]}] ${p.toFixed(2)}%`)
+            core.info(`[${files[0]}] ${p * 100}%`)
           }
         }).catch(err => {
           core.setFailed(err && err.message)
@@ -58,10 +59,10 @@ const fg = require('fast-glob');
             const base = src.replace(/\*+$/g, '')
             const filename = file.replace(base, '')
             return oss.multipartUpload(`${dst}${filename}`, resolve(file), {
-              parallel: 5,
+              parallel: parallel,
               timeout: timeout,
               progress: (p) => {
-                core.info(`[${filename}] ${p.toFixed(2)}%`)
+                core.info(`[${filename}] ${p * 100}%`)
               }
             }).catch(err => {
               core.setFailed(err && err.message)
