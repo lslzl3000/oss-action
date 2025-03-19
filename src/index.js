@@ -12,7 +12,7 @@ const fg = require('fast-glob');
     timeout = Number(timeout) * 1000
     let parallel = core.getInput('parallel')
     parallel = Number(parallel)
-    core.info('[Params]', 'timeout:', timeout, 'parallel:', parallel)
+    core.info(`[Params] timeout: ${timeout} parallel: ${parallel}`)
     
     // OSS 实例化
     const opts = {
